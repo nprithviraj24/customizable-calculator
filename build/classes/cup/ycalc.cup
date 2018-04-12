@@ -1,0 +1,194 @@
+/* ----------------------User code--------------------*/
+
+package src;
+import java_cup.runtime.*;
+   
+/* ------------Grammar symbol declarations----------- */
+   
+terminal                PLUS, MINUS, TIMES, DIVIDE, RND, LPAREN, RPAREN;
+terminal Double         NUMBER;
+non terminal Token      P;
+non terminal Token      E, T, F, K, J, L, M;
+
+
+/* Precedences */
+precedence left PLUS, MINUS;
+precedence left TIMES, DIVIDE, LPAREN, RPAREN;
+//precedence left UMINUS; 
+
+
+/* ------------Grammar rules----------- */
+
+P   ::= E:e 
+        {:  System.out.println();
+            System.out.println("Evaluation result = " + e.value); 
+            System.out.println("Prefix Exp = " + e.prefix);
+            System.out.println("Posfix Exp = " + e.postfix);
+            System.out.println("Infix Exp = " + e.infix);
+            //System.out.println("checking Infix");
+            //System.out.println("Pre: "+e.prefix);
+            RESULT = e;
+        :}
+        | E:e PLUS
+        {:
+           System.out.println("Syntax Error. UNEXPECTED + OPERATOR. Please re-enter the values");
+        :}
+        | E:e MINUS
+        {:
+            System.out.println("Syntax Error, UNEXPECTED - OPERATOR Please re-enter the values");
+        :}
+        | E:e TIMES
+        {:
+            System.out.println("Syntax Error, UNEXPECTED * OPERATOR. Please re-enter the values");
+        :}
+        | E:e DIVIDE
+        {:
+            System.out.println("Syntax Error, UNEXPECTED / OPERATOR. Please re-enter the values");
+        :};
+   
+E   ::= E:e MINUS T:t
+        {:
+          RESULT = new Token(e.value - t.value, "(- " +e.prefix+ " " +t.prefix+")",
+          "("+e.postfix+" "+t.postfix+ " -)","");    
+        :}
+        |E:e PLUS T:t
+        {:
+          RESULT = new Token(e.value + t.value, "(+ " +e.prefix+ " " +t.prefix+")",
+          "("+e.postfix+" "+t.postfix+ " +)","");  
+        :}
+        |T:t
+        {:
+            RESULT = t;
+        :};
+
+T   ::= T:t TIMES F:f
+        {:
+          RESULT = new Token(t.value * f.value, "( * " +t.prefix+ " " +f.prefix+")",
+          "("+t.postfix+" "+f.postfix+ " *)","");
+        :}
+        | T:t RND F:f
+        {:
+            
+          RESULT = new Token(((2*t.value * f.value)+(3*t.value * f.value)), "$ " +t.prefix+ " " +f.prefix,
+          "("+t.postfix+" "+f.postfix+ " $)","");
+        :}
+        | T:t DIVIDE F:f
+        {:
+          RESULT = new Token(t.value / f.value, "(/ " +t.prefix+ " " +f.prefix+")",
+          "("+t.postfix+" "+f.postfix+ " /)","");
+        :}
+        | F:f
+        {:
+            RESULT = f;
+        :};
+
+F   ::= LPAREN E:e RPAREN
+        {:
+            RESULT = e;
+        :}
+        |  
+        /*MINUS E:e
+        {:
+            RESULT = new Token(0-e.value, "(-"+e.prefix+")", "(-"+e.postfix()+")", "");
+        :}
+        | %prec UMINUS*/
+        NUMBER:n
+        {:
+            RESULT = new Token(n, n.toString(), n.toString(), "");
+        :};
+
+/* Postfix */
+P   ::= L:l
+        {:
+            System.out.println("Evaluation result = " + l.value); 
+            System.out.println("Prefix Exp = " + l.prefix);
+            System.out.println("Infix Exp = " + l.infix);
+            //System.out.println("checking Post1");
+            System.out.println(l);
+            RESULT = l;
+        :};
+
+L   ::= K:k1 K:k2 PLUS 
+        {:  
+            RESULT = new Token(k1.value+k2.value, "(+ "+k1.prefix+" "+k2.prefix+")",""
+                                ,"( "+ k1.infix+ " + "+k2.infix+" )");
+        :}
+        | K:k1 K:k2 MINUS
+        {:
+            RESULT = new Token(k1.value-k2.value, "(- "+k1.prefix+" "+k2.prefix+")",""
+                                ,"( "+ k1.infix+ " - "+k2.infix + " )");
+        :}
+        | K:k1 K:k2 TIMES
+        {:
+            RESULT = new Token(k1.value*k2.value, "(* "+k1.prefix+" "+k2.prefix+")",""
+                                ,"( "+ k1.infix+ " * "+k2.infix+ " )");
+        :}
+        | K:k1 K:k2 RND
+        {:
+            RESULT = new Token(((2*k1.value * k2.value)+(3*k1.value * k2.value)), "($ "+k1.prefix+" "+k2.prefix+")",""
+                                ,"( "+ k1.infix+ " $ "+k2.infix+ " )");
+        :}
+        | K:k1 K:k2 DIVIDE
+        {:
+            RESULT = new Token(k1.value/k2.value, "(/ "+k1.prefix+" "+k2.prefix+")",""
+                                ,"( "+ k1.infix+ " / "+k2.infix+ " )");
+        :};
+
+K   ::= L:l
+        {:
+          RESULT = l;
+        :};
+        
+K   ::= NUMBER:n
+        {:  
+          RESULT = new Token(n, n.toString(),""
+                                , n.toString());
+        :};
+
+/* Prefix */
+P   ::= M:m
+        {:
+            System.out.println("Evaluation result = " + m.value); 
+            System.out.println("Postfix Exp = " + m.postfix);
+            System.out.println("Infix Exp = " + m.infix);
+            //System.out.println("checking Pre1");
+            RESULT = m;
+        :};
+
+M   ::= PLUS J:j1 J:j2 
+        {:  
+            RESULT = new Token(j1.value+j2.value, "","("+j1.postfix+" "+j2.postfix+ " +)"
+                                ,"( "+ j1.infix+ " + "+j2.infix+ " )");
+        :}
+        | MINUS J:j1 J:j2 
+        {:
+            RESULT = new Token(j1.value-j2.value, "","("+j1.postfix+" "+j2.postfix+ " -)"
+                                ,"( "+ j1.infix+ " - "+j2.infix+ " )");
+        :}
+        | TIMES J:j1 J:j2
+        {:
+            RESULT = new Token(j1.value*j2.value, "","("+j1.postfix+" "+j2.postfix+ " *)"
+                                ,"( "+ j1.infix+ " * "+j2.infix+ " )");
+        :}
+        | RND J:j1 J:j2
+        {:
+            RESULT = new Token(((2*j1.value * j2.value)+(3*j1.value * j2.value)), "","("+j1.postfix+" "+j2.postfix+ " $)"
+                                ,"( "+ j1.infix+ " $ "+j2.infix+ " )");
+        :}
+        | DIVIDE J:j1 J:j2
+        {:
+            RESULT = new Token(j1.value/j2.value, "","("+j1.postfix+" "+j2.postfix+ " /)"
+                                ,"( "+ j1.infix+ " / "+j2.infix+ " )");
+        :};
+
+J   ::= M:m
+        {:
+          RESULT = m;
+        :};
+
+J   ::= NUMBER:n
+        {:  
+          RESULT = new Token(n, "",n.toString()
+                                , n.toString());
+        :};
+        
